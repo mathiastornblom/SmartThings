@@ -58,7 +58,7 @@ metadata {
         }
         standardTile("configure", "device.needUpdate", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
             state "NO" , label:'', action:"configuration.configure", icon:"st.secondary.configure"
-            state "YES", label:'', action:"configuration.configure", icon:"https://github.com/mathiastornblom/SmartThings/raw/master/devicetypes/nexa/nexa_an-179.src/configure@2x.png"
+            state "YES", label:'', action:"configuration.configure", icon:"https://github.com/mathiastornblom/SmartThings/raw/master/devicetypes/nexa/nexa_an-179.src/configure%402x.png"
         }
     }
 }
