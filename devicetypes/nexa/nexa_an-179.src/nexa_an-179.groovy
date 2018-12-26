@@ -20,21 +20,30 @@
  */
 
 metadata {
-    definition (name: "NEXA AN-179 In-Wall relay", namespace: "mathiastornblom", author: "Mathias Törnblom") {
-        capability "Actuator"
-        capability "Switch"
-        capability "Polling"
-        capability "Refresh"
-        capability "Relay Switch"
-        capability "Configuration"
+	definition (name: "NEXA AN-179 In-Wall relay", namespace: "mathiastornblom", author: "Mathias Törnblom", runLocally: false, minHubCoreVersion: '000.017.0012', executeCommandsLocally: false)
+	{
+		capability "Actuator"
+		capability "Switch"
+		capability "Polling"
+		capability "Refresh"
+		capability "Sensor"
+		capability "Health Check"
+		capability "Relay Switch"
 		
         fingerprint mfr: "0060", prod: "0004", model: "0008"
 		fingerprint type: "1001", cc: "5E,86,72,5A,85,59,73,20,71,70,25,27,7A"
 		
     }
 
-    simulator {
-    }
+	// simulator metadata
+	simulator {
+		status "on":  "command: 2003, payload: FF"
+		status "off": "command: 2003, payload: 00"
+
+		// reply messages
+		reply "2001FF,delay 100,2502": "command: 2503, payload: FF"
+		reply "200100,delay 100,2502": "command: 2503, payload: 00"
+	}
 
     preferences {
         input description: "Once you change values on this page, the corner of the \"configuration\" icon will change orange until all configuration parameters are updated.", title: "Settings", displayDuringSetup: false, type: "paragraph", element: "paragraph"
@@ -103,7 +112,17 @@ def zwaveEvent(physicalgraph.zwave.commands.manufacturerspecificv2.ManufacturerS
     createEvent(name: "manufacturer", value: cmd.manufacturerName)
 }
 
+def zwaveEvent(physicalgraph.zwave.commands.configurationv1.ConfigurationReport cmd) {
+    update_current_properties(cmd)
+    logging("${device.displayName} parameter '${cmd.parameterNumber}' with a byte size of '${cmd.size}' is set to '${cmd2Integer(cmd.configurationValue)}'", 2)
+}
+
+def zwaveEvent(physicalgraph.zwave.commands.hailv1.Hail cmd) {
+	[name: "hail", value: "hail", descriptionText: "Switch button was pressed", displayed: false]
+}
+
 def zwaveEvent(physicalgraph.zwave.Command cmd) {
+    // Handles all Z-Wave commands we aren't interested in
     logging("$device.displayName: Unhandled: $cmd", 2)
     [:]
 }
@@ -138,7 +157,7 @@ def refresh() {
     logging("refresh()", 1)
     commands([
         zwave.switchBinaryV1.switchBinaryGet(),
-        zwave.manufacturerSpecificV1.manufacturerSpecificGet(),
+        zwave.manufacturerSpecificV1.manufacturerSpecificGet()
     ])
 }
 
@@ -325,11 +344,6 @@ def integer2Cmd(value, size) {
             [value4, value3, value2, value1]
             break
     }
-}
-
-def zwaveEvent(physicalgraph.zwave.commands.configurationv1.ConfigurationReport cmd) {
-    update_current_properties(cmd)
-    logging("${device.displayName} parameter '${cmd.parameterNumber}' with a byte size of '${cmd.size}' is set to '${cmd2Integer(cmd.configurationValue)}'", 2)
 }
 
 private command(physicalgraph.zwave.Command cmd) {
